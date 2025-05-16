@@ -27,8 +27,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.compose.PlayerSurface
-import com.sg.exoplayerlearning.ActionType
-import com.sg.exoplayerlearning.PlayerAction
 import com.sg.exoplayerlearning.PlayerViewModel
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.getValue
@@ -36,6 +34,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.media3.common.Player
+import com.sg.exoplayerlearning.models.ActionType
+import com.sg.exoplayerlearning.models.PlayerAction
 import kotlinx.coroutines.delay
 
 

@@ -5,6 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import com.sg.exoplayerlearning.models.ActionType
+import com.sg.exoplayerlearning.models.PlayerAction
+import com.sg.exoplayerlearning.models.VideoItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -107,16 +110,3 @@ class PlayerViewModel: ViewModel() {
         _playerState.value?.release()
     }
 }
-
-data class PlayerAction(
-    val actionType: ActionType,
-    val data: Any? =  null,
-)
-
-enum class ActionType {
-    PLAY, PAUSE, REWIND, FORWARD, PREVIOUS, NEXT
-}
-
-data class VideoItem(
-    val currentPosition: Long = 0
-)
