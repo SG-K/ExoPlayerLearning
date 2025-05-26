@@ -54,12 +54,13 @@ class PlayerViewModel: ViewModel() {
                 }
             }
 
+            trackMediaItemTransitions()
         }
     }
 
-    fun updateCurrentPosition(id: String, position: Long) {
-        hashMapVideoStates[id] = hashMapVideoStates[id]?.copy(currentPosition = position)
-            ?: VideoItem(currentPosition = position)
+    fun updateCurrentPosition(id: String, position: Long, duration: Long) {
+        hashMapVideoStates[id] = hashMapVideoStates[id]?.copy(currentPosition = position, duration = duration)
+            ?: VideoItem(currentPosition = position, duration = duration)
     }
 
     fun executeAction(playerAction: PlayerAction) {
@@ -70,6 +71,13 @@ class PlayerViewModel: ViewModel() {
             ActionType.FORWARD -> _playerState.value?.forward()
             ActionType.NEXT -> _playerState.value?.playNext()
             ActionType.PREVIOUS -> _playerState.value?.playPrevious()
+            ActionType.SEEK -> _playerState.value?.seekWithValidation(playerAction.data as? Long)
+        }
+    }
+
+    private fun ExoPlayer.seekWithValidation(position: Long?) {
+        position?.let {
+            seekTo(position)
         }
     }
 
@@ -102,6 +110,31 @@ class PlayerViewModel: ViewModel() {
             val mediaItemId = getMediaItemAt(previousIndex)
             val seekPosition = hashMapVideoStates[mediaItemId.mediaId]?.currentPosition ?: 0L
             seekTo(previousIndex, seekPosition)
+        }
+    }
+
+    private fun trackMediaItemTransitions() {
+        _playerState.value?.addListener(
+            object : Player.Listener {
+                override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                    _playerState.value?.currentMediaItemIndex?.let {
+                        checkAndResetPreviousMediaItemProgress(it)
+                    }
+                }
+            }
+        )
+    }
+
+    private fun checkAndResetPreviousMediaItemProgress(currentMediaItemIndex: Int) {
+        val previousIndex = currentMediaItemIndex - 1
+        if (previousIndex >= 0) {
+            _playerState.value?.getMediaItemAt(previousIndex)?.let { previousMediaItem ->
+                hashMapVideoStates[previousMediaItem.mediaId]?.let { previousVideoItem ->
+                    if (previousVideoItem.duration - previousVideoItem.currentPosition <= 3000) {
+                        hashMapVideoStates[previousMediaItem.mediaId] = previousVideoItem.copy(currentPosition = 0)
+                    }
+                }
+            }
         }
     }
 
