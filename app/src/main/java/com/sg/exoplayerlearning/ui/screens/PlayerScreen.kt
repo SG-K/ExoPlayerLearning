@@ -193,6 +193,9 @@ fun VideoControls(
         while (isActive) {
             if (player.isPlaying && isSeeking.not()) {
                 position = player.currentPosition
+                if (player.duration != duration) {
+                    duration = player.duration
+                }
             }
             delay(500)
         }
@@ -314,7 +317,10 @@ fun TimelineControllers(
                         .fillMaxWidth()
                         .padding(horizontal = 12.dp)
                         .height(3.dp) // thinner progress line
-                        .background(Color.Gray.copy(alpha = 0.3f), shape = RoundedCornerShape(1.5.dp))
+                        .background(
+                            Color.Gray.copy(alpha = 0.3f),
+                            shape = RoundedCornerShape(1.5.dp)
+                        )
                 ) {
                     Box(
                         modifier = Modifier
