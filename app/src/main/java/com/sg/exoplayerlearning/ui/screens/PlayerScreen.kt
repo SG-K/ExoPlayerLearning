@@ -39,11 +39,13 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.unit.sp
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import com.sg.exoplayerlearning.models.ActionType
@@ -125,6 +127,7 @@ fun VideoControls(
     playerActions: (PlayerAction) -> Unit,
 ) {
     var isPlaying by remember { mutableStateOf(player.isPlaying) }
+    var formatedTime by remember { mutableStateOf("") }
     var isBuffering by remember { mutableStateOf(player.isLoading) }
     var controlsVisible by remember { mutableStateOf(true) }
     var position by remember { mutableStateOf(0L) }
@@ -152,6 +155,7 @@ fun VideoControls(
                 modifier = Modifier.align(Alignment.BottomStart),
                 duration = duration,
                 playerPosition = position,
+                formatedTime = formatedTime,
                 seeking = { isSeeking = it }
             ) {
                 playerActions(PlayerAction(ActionType.SEEK, it))
@@ -202,6 +206,7 @@ fun VideoControls(
                     duration = player.duration
                 }
             }
+            formatedTime = "${formatTime(position)} : ${formatTime(duration)}"
             delay(500)
         }
     }
@@ -296,6 +301,7 @@ fun TimelineControllers(
     playerPosition: Long,
     duration: Long,
     seeking: (Boolean) -> Unit,
+    formatedTime: String,
     seekPlayerToPosition:(Long) -> Unit,
 ) {
 
@@ -303,6 +309,9 @@ fun TimelineControllers(
 
     Row(
         modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Slider(
             value = position.toFloat().coerceAtMost(duration.toFloat()),
@@ -315,7 +324,9 @@ fun TimelineControllers(
                 seeking(false)
             },
             valueRange = 0f..duration.toFloat(),
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .weight(1f) // Takes all the space except what Text needs
+                .padding(end = 8.dp), // small space between slider and text
             colors = SliderDefaults.colors(
                 thumbColor = Color.Red,
                 activeTrackColor = Color.Red
@@ -323,18 +334,16 @@ fun TimelineControllers(
             thumb = {
                 Box(
                     modifier = Modifier
-                        .size(12.dp) // circular thumb size
+                        .size(12.dp)
                         .background(Color.Red, shape = CircleShape)
                 )
             },
-            track = { positions ->
-                // Custom track with reduced height
+            track = {
                 val fraction = if (duration == 0L) 0f else (position.toFloat().coerceAtMost(duration.toFloat()) / duration).coerceIn(0f, 1f)
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp)
-                        .height(3.dp) // thinner progress line
+                        .height(3.dp)
                         .background(
                             Color.Gray.copy(alpha = 0.3f),
                             shape = RoundedCornerShape(1.5.dp)
@@ -342,17 +351,33 @@ fun TimelineControllers(
                 ) {
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth(fraction = fraction)
+                            .fillMaxWidth(fraction)
                             .height(3.dp)
                             .background(Color.Red, shape = RoundedCornerShape(1.5.dp))
                     )
                 }
             }
         )
+
+       androidx.compose.animation.AnimatedVisibility(visible = formatedTime.isNotEmpty()) {
+            Text(
+                text = formatedTime,
+                color = Color.White,
+                fontSize = 12.sp
+            )
+        }
     }
+
 
     LaunchedEffect(playerPosition) {
         position = playerPosition
     }
 
+}
+
+fun formatTime(milliseconds: Long): String {
+    val totalSeconds = milliseconds / 1000
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
+    return String.format("%02d:%02d", minutes, seconds)
 }
