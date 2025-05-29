@@ -1,6 +1,7 @@
 package com.sg.exoplayerlearning.ui.screens
 
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -34,6 +35,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.compose.PlayerSurface
 import com.sg.exoplayerlearning.PlayerViewModel
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -123,6 +125,7 @@ fun VideoControls(
     playerActions: (PlayerAction) -> Unit,
 ) {
     var isPlaying by remember { mutableStateOf(player.isPlaying) }
+    var isBuffering by remember { mutableStateOf(player.isLoading) }
     var controlsVisible by remember { mutableStateOf(true) }
     var position by remember { mutableStateOf(0L) }
     var duration by remember { mutableStateOf(0L) }
@@ -138,6 +141,7 @@ fun VideoControls(
         ) {
             ShowButtonControllers(
                 isPlaying = isPlaying,
+                isBuffering = isBuffering,
                 playerActions = playerActions,
                 isPlayerPlaying = {
                     player.isPlaying
@@ -170,6 +174,7 @@ fun VideoControls(
             override fun onPlaybackStateChanged(playbackState: Int) {
                 super.onPlaybackStateChanged(playbackState)
                 duration = player.duration.coerceAtLeast(0L)
+                isBuffering = playbackState == Player.STATE_BUFFERING
             }
         }
         player.addListener(listener)
@@ -206,6 +211,7 @@ fun VideoControls(
 fun ShowButtonControllers(
     modifier: Modifier = Modifier,
     isPlaying: Boolean,
+    isBuffering: Boolean,
     isPlayerPlaying: () -> Boolean,
     playerActions: (PlayerAction) -> Unit,
 ) {
@@ -236,15 +242,27 @@ fun ShowButtonControllers(
             )
         }
 
-        IconButton(onClick = {
-            playerActions(PlayerAction(if (isPlayerPlaying()) ActionType.PAUSE else ActionType.PLAY))
-        }) {
-            Icon(
-                imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                contentDescription = "Play/Pause",
-                tint = Color.White,
-                modifier = Modifier.size(64.dp)
-            )
+        Row (
+            modifier = Modifier.size(48.dp)
+        ) {
+            AnimatedVisibility(visible = isBuffering,) {
+                CircularProgressIndicator(
+                    Modifier.size(48.dp)
+                )
+            }
+
+            AnimatedVisibility(isBuffering.not()) {
+                IconButton(onClick = {
+                    playerActions(PlayerAction(if (isPlayerPlaying()) ActionType.PAUSE else ActionType.PLAY))
+                }) {
+                    Icon(
+                        imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                        contentDescription = "Play/Pause",
+                        tint = Color.White,
+                        modifier = Modifier.size(64.dp)
+                    )
+                }
+            }
         }
 
         IconButton(onClick = {
