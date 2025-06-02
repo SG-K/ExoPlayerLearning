@@ -48,6 +48,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.sp
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
 import com.sg.exoplayerlearning.models.ActionType
 import com.sg.exoplayerlearning.models.PlayerAction
 import kotlinx.coroutines.currentCoroutineContext
@@ -55,6 +56,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 
 
+@androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 fun PlayerRoute(
     modifier: Modifier = Modifier,
@@ -250,7 +252,7 @@ fun ShowButtonControllers(
         Row (
             modifier = Modifier.size(48.dp)
         ) {
-            AnimatedVisibility(visible = isBuffering,) {
+            AnimatedVisibility(visible = isBuffering) {
                 CircularProgressIndicator(
                     Modifier.size(48.dp)
                 )

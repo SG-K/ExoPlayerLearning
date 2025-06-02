@@ -54,19 +54,22 @@ val media3_version = "1.6.1"
 dependencies {
 
     // For media playback using ExoPlayer
-    implementation(libs.androidx.media3.exoplayer)
-
+    implementation(libs.media3.exoplayer)
     // For DASH playback support with ExoPlayer
-    implementation(libs.androidx.media3.exoplayer.dash)
-
+    implementation(libs.media3.exoplayer.dash)
     // For building media playback UIs using Jetpack Compose
-    implementation(libs.androidx.media3.ui.compose)
+    implementation(libs.media3.ui.compose)
+    // Advanced usage or customization of the data source
+    implementation(libs.media3.datasource)
+    implementation(libs.media3.datasource.okhttp)
+
+    // OkHttp client for data source
+    implementation(libs.okhttp)
 
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.hilt.navigation.compose)
 
     implementation(libs.androidx.material.icons.extended)
-
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

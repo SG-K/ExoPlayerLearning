@@ -1,18 +1,21 @@
 package com.sg.exoplayerlearning
 
 import android.content.Context
-import android.util.Log
-import androidx.annotation.OptIn
 import androidx.lifecycle.ViewModel
 import androidx.media3.common.MediaItem
-import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.DataSource
+import androidx.media3.datasource.DefaultDataSource
+import androidx.media3.datasource.cache.CacheDataSource
+import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.analytics.AnalyticsListener
-import androidx.media3.exoplayer.analytics.AnalyticsListener.EventTime
+import androidx.media3.exoplayer.source.ConcatenatingMediaSource
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import com.sg.exoplayerlearning.analytics.LearningsPlayerAnalytics
 import com.sg.exoplayerlearning.analytics.logEvent
+import com.sg.exoplayerlearning.cache.ExoPlayerCache
 import com.sg.exoplayerlearning.models.ActionType
 import com.sg.exoplayerlearning.models.PlayerAction
 import com.sg.exoplayerlearning.models.VideoItem
@@ -20,6 +23,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import okhttp3.OkHttpClient
 
 @UnstableApi
 @HiltViewModel
@@ -40,8 +44,13 @@ class PlayerViewModel: ViewModel() {
     private val hashMapVideoStates = mutableMapOf<String,VideoItem>()
     private lateinit var analytics: LearningsPlayerAnalytics
 
+    //endregion
+
     fun createPlayerWithMediaItems(context: Context) {
         if (_playerState.value == null) {
+
+            val cacheFactory = buildOkHttoDataSourceFactory(context)
+
             // Create Media items list
             val mediaItems = listOf(
                 MediaItem.Builder().setUri(Video_1).setMediaId("Video_1").setTag("Video_1").build(),
@@ -57,19 +66,33 @@ class PlayerViewModel: ViewModel() {
 
             // Create the player instance and update it to UI via stateFlow
             _playerState.update {
-                ExoPlayer.Builder(context).build().apply {
-                    setMediaItems(mediaItems)
-                    prepare()
-                    playWhenReady = true
-                    play()
-                }
+                ExoPlayer.Builder(context)
+                    .setMediaSourceFactory(DefaultMediaSourceFactory(cacheFactory))
+                    .build().apply {
+                        setMediaItems(mediaItems)
+                        prepare()
+                        playWhenReady = true
+                        play()
+                    }
             }
 
             trackMediaItemTransitions()
             addAnalytics()
         }
     }
-    //endregion
+
+    fun buildOkHttoDataSourceFactory(context: Context): DataSource.Factory {
+        val simpleCache = ExoPlayerCache.getSimpleCache(context)
+
+        val okHttpClient = OkHttpClient.Builder().build()
+        val okHttpDataSourceFactory = OkHttpDataSource.Factory(okHttpClient)
+
+        val cacheDataSourceFactory = CacheDataSource.Factory()
+            .setCache(simpleCache)
+            .setUpstreamDataSourceFactory(okHttpDataSourceFactory)
+            .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
+        return cacheDataSourceFactory
+    }
 
     //region User actions
     fun executeAction(playerAction: PlayerAction) {
