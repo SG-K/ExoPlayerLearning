@@ -365,7 +365,7 @@ fun TimelineControllers(
             Text(
                 text = formatedTime,
                 color = Color.White,
-                fontSize = 12.sp
+                fontSize = 15.sp
             )
         }
     }
